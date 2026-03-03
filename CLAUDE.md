@@ -79,4 +79,4 @@ Tests use **Vitest + React Testing Library**, colocated in `__tests__/` subdirec
 
 ## Code Style
 
-Use comments sparingly. Only comment complex code.
+Use comments sparingly. Only comment complex code in a friendly way.
