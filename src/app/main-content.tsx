@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -33,6 +33,62 @@ interface MainContentProps {
 
 export function MainContent({ user, project }: MainContentProps) {
   const [activeView, setActiveView] = useState<"preview" | "code">("preview");
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Initialize audio context
+  useEffect(() => {
+    const initAudio = () => {
+      if (!audioContextRef.current && typeof window !== 'undefined') {
+        try {
+          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        } catch (error) {
+          console.log('Audio context not supported');
+        }
+      }
+    };
+    initAudio();
+  }, []);
+
+  // Create click sound effect
+  const playClickSound = useCallback(() => {
+    if (!audioContextRef.current) return;
+    
+    try {
+      const ctx = audioContextRef.current;
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      // Create a pleasant click sound
+      oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.1);
+      
+      gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+      
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + 0.1);
+    } catch (error) {
+      console.log('Error playing sound:', error);
+    }
+  }, []);
+
+  // Enhanced toggle handler with animation and sound
+  const handleToggle = useCallback((newValue: string) => {
+    if (newValue === activeView) return;
+    
+    setIsAnimating(true);
+    playClickSound();
+    
+    // Slight delay for visual feedback
+    setTimeout(() => {
+      setActiveView(newValue as "preview" | "code");
+      setTimeout(() => setIsAnimating(false), 150);
+    }, 50);
+  }, [activeView, playClickSound]);
 
   return (
     <FileSystemProvider initialData={project?.data}>
@@ -63,26 +119,35 @@ export function MainContent({ user, project }: MainContentProps) {
                 <div className="h-14 border-b border-neutral-200/60 px-6 flex items-center justify-between bg-neutral-50/50">
                   <Tabs
                     value={activeView}
-                    onValueChange={(v) =>
-                      setActiveView(v as "preview" | "code")
-                    }
+                    onValueChange={handleToggle}
                   >
-                    <TabsList className="bg-white/60 border border-neutral-200/60 p-0.5 h-9 shadow-sm">
-                      <TabsTrigger value="preview" className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-sm text-neutral-600 px-4 py-1.5 text-sm font-medium transition-all">Preview</TabsTrigger>
-                      <TabsTrigger value="code" className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-sm text-neutral-600 px-4 py-1.5 text-sm font-medium transition-all">Code</TabsTrigger>
+                    <TabsList className={`bg-white/60 border border-neutral-200/60 p-0.5 h-9 shadow-sm transition-all duration-150 ${isAnimating ? 'scale-95 shadow-md' : 'scale-100'}`}>
+                      <TabsTrigger 
+                        value="preview" 
+                        className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-sm text-neutral-600 px-4 py-1.5 text-sm font-medium transition-all duration-200 hover:bg-neutral-50 active:scale-95 active:bg-neutral-100"
+                      >
+                        Preview
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="code" 
+                        className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-sm text-neutral-600 px-4 py-1.5 text-sm font-medium transition-all duration-200 hover:bg-neutral-50 active:scale-95 active:bg-neutral-100"
+                      >
+                        Code
+                      </TabsTrigger>
                     </TabsList>
                   </Tabs>
                   <HeaderActions user={user} projectId={project?.id} />
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 overflow-hidden bg-neutral-50">
-                  {activeView === "preview" ? (
+                <div className="flex-1 overflow-hidden bg-neutral-50 relative">
+                  <div className={`absolute inset-0 transition-all duration-300 ${activeView === "preview" ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'}`}>
                     <div className="relative h-full bg-white">
                       <IterationTimeline />
                       <PreviewFrame />
                     </div>
-                  ) : (
+                  </div>
+                  <div className={`absolute inset-0 transition-all duration-300 ${activeView === "code" ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`}>
                     <ResizablePanelGroup
                       direction="horizontal"
                       className="h-full"
@@ -107,7 +172,7 @@ export function MainContent({ user, project }: MainContentProps) {
                         </div>
                       </ResizablePanel>
                     </ResizablePanelGroup>
-                  )}
+                  </div>
                 </div>
               </div>
             </ResizablePanel>
