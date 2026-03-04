@@ -122,14 +122,14 @@ export function MainContent({ user, project }: MainContentProps) {
                       <TabsTrigger 
                         value="preview" 
                         disabled={isAnimating}
-                        className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-[0_2px_8px_rgba(0,0,0,0.12)] text-neutral-600 px-4 py-1.5 text-sm font-medium transition-all duration-300 hover:text-neutral-800 active:scale-95 data-[state=active]:scale-100"
+                        className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-[0_2px_8px_rgba(0,0,0,0.12)] text-neutral-600 px-4 py-1.5 text-sm font-medium transition-all duration-300 hover:text-neutral-800 active:scale-95 data-[state=active]:scale-100"
                       >
                         Preview
                       </TabsTrigger>
-                      <TabsTrigger 
-                        value="code" 
+                      <TabsTrigger
+                        value="code"
                         disabled={isAnimating}
-                        className="data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-[0_2px_8px_rgba(0,0,0,0.12)] text-neutral-600 px-4 py-1.5 text-sm font-medium transition-all duration-300 hover:text-neutral-800 active:scale-95 data-[state=active]:scale-100"
+                        className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-[0_2px_8px_rgba(0,0,0,0.12)] text-neutral-600 px-4 py-1.5 text-sm font-medium transition-all duration-300 hover:text-neutral-800 active:scale-95 data-[state=active]:scale-100"
                       >
                         Code
                       </TabsTrigger>
@@ -140,7 +140,7 @@ export function MainContent({ user, project }: MainContentProps) {
 
                 {/* Content Area */}
                 <div className="flex-1 overflow-hidden bg-neutral-50">
-                  <div className={`transition-all duration-300 ${isAnimating ? 'opacity-90 scale-[0.99]' : 'opacity-100 scale-100'}`}>
+                  <div className={`h-full transition-all duration-300 ${isAnimating ? 'opacity-90 scale-[0.99]' : 'opacity-100 scale-100'}`}>
                     {activeView === "preview" ? (
                       <div className="relative h-full bg-white animate-in slide-in-from-right-2 duration-300">
                         <IterationTimeline />
